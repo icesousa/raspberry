@@ -47,4 +47,3 @@ while ($true) {
 
     Start-Sleep -Seconds (Get-Random -Minimum 1 -Maximum 3)
 }
-'''
